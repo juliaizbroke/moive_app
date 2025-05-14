@@ -2,7 +2,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import MovieCard from "@/app/components/movie_card";
-import { MovieData } from "@/types/movieTypes";
+import { MovieData } from "@/app/types/movieTypes";
 
 const MovieDetailPage = () => {
   const params = useParams();
