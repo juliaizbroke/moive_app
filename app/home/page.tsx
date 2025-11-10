@@ -17,36 +17,47 @@ interface MovieData {
   vote_count: number;
 }
 
+const TMDB_BEARER = `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlZjc5OGM1NzkxNGFmODA2N2M0OGM5OGJkYzA1Mzk5NiIsIm5iZiI6MTcyOTgzMTgyNC45NDIwMDAyLCJzdWIiOiI2NzFiMjM5MGU4MzNkOTJlZjA2MDAxN2UiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.j8rGZqQoL9zPunJ_LFdLSxkTFmGOgakyNImMovDSKGE`;
+
+interface MovieSection {
+  title: string;
+  endpoint: string;
+  movies: MovieData[];
+}
+
 export default function Home() {
-  const [popular, setPopular] = useState<MovieData[]>([]);
-  const [toprated, setToprated] = useState<MovieData[]>([]);
+  const [sections, setSections] = useState<MovieSection[]>([
+    { title: "Now Playing", endpoint: "now_playing", movies: [] },
+    { title: "Popular Movies", endpoint: "popular", movies: [] },
+    { title: "Top Rated", endpoint: "top_rated", movies: [] },
+    { title: "Upcoming", endpoint: "upcoming", movies: [] },
+  ]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [popResponse, topResponse] = await Promise.all ([fetch(
-          "https://api.themoviedb.org/3/movie/popular",
-          {
+        const fetchPromises = sections.map(section =>
+          fetch(`https://api.themoviedb.org/3/movie/${section.endpoint}`, {
             headers: {
               accept: "application/json",
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlZjc5OGM1NzkxNGFmODA2N2M0OGM5OGJkYzA1Mzk5NiIsIm5iZiI6MTcyOTgzMTgyNC45NDIwMDAyLCJzdWIiOiI2NzFiMjM5MGU4MzNkOTJlZjA2MDAxN2UiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.j8rGZqQoL9zPunJ_LFdLSxkTFmGOgakyNImMovDSKGE`,
+              Authorization: TMDB_BEARER,
             },
-          }
-        ). then(res => res.json()), 
-        fetch("https://api.themoviedb.org/3/movie/top_rated",{
-          headers: {
-            accept: "application/json", 
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlZjc5OGM1NzkxNGFmODA2N2M0OGM5OGJkYzA1Mzk5NiIsIm5iZiI6MTcyOTgzMTgyNC45NDIwMDAyLCJzdWIiOiI2NzFiMjM5MGU4MzNkOTJlZjA2MDAxN2UiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.j8rGZqQoL9zPunJ_LFdLSxkTFmGOgakyNImMovDSKGE`,
-          },
-        }
-      ).then(res => res.json())]);
+          }).then(res => res.json())
+        );
 
-        setPopular(popResponse.results);
-        setToprated(topResponse.results);
+        const responses = await Promise.all(fetchPromises);
+        
+        setSections(prev => prev.map((section, index) => ({
+          ...section,
+          movies: responses[index].results || []
+        })));
       } catch (error) {
         setError("Error fetching data");
         console.error("Error:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -54,18 +65,28 @@ export default function Home() {
   }, []);
 
   return (
-    <div>
+    <div className="min-h-screen bg-base-200">
       <Navbar />
-      <div className="bg-base-200 pt-10">
-        <h3 className="text-2xl font-bold mb-6  ml-20 pt-5">Popular Movies</h3>
-        <Carousel movies={popular} />
-        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
-      </div>
-      <div className="bg-base-200 pt-10">
-        <h3 className="text-2xl font-bold mb-6  ml-20 pt-5">Top Rated</h3>
-        <Carousel movies={toprated} />
-        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-[50vh]">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-10">
+          <p className="text-red-500">{error}</p>
+        </div>
+      ) : (
+        <div className="space-y-8 py-8">
+          {sections.map((section, index) => (
+            <section key={section.endpoint} className="pb-4">
+              <div className="max-w-[1400px] mx-auto px-4">
+                <h2 className="text-2xl font-bold mb-6">{section.title}</h2>
+                <Carousel movies={section.movies} />
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
