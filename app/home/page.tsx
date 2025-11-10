@@ -35,6 +35,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -49,9 +50,9 @@ export default function Home() {
 
         const responses = await Promise.all(fetchPromises);
         
-        setSections(prev => prev.map((section, index) => ({
+        setSections(sections => sections.map((section, i) => ({
           ...section,
-          movies: responses[index].results || []
+          movies: responses[i].results || []
         })));
       } catch (error) {
         setError("Error fetching data");
@@ -77,7 +78,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="space-y-8 py-8">
-          {sections.map((section, index) => (
+          {sections.map((section) => (
             <section key={section.endpoint} className="pb-4">
               <div className="max-w-[1400px] mx-auto px-4">
                 <h2 className="text-2xl font-bold mb-6">{section.title}</h2>

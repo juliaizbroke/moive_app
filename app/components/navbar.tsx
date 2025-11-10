@@ -22,6 +22,7 @@ const Navbar: React.FC = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const searchTimeout = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
 
   const handleSearch = useCallback(async (query: string) => {
     if (query.trim().length < 2) {

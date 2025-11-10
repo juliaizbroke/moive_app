@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import MovieCard from "@/app/components/movie_card";
 import { MovieData } from "@/app/types/movieTypes";
@@ -19,14 +19,21 @@ interface Cast {
   profile_path: string | null;
 }
 
+interface MovieCredit {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date: string;
+  popularity: number;
+}
+
 const MovieDetailPage = () => {
   const params = useParams();
-  const router = useRouter();
   const movie_id = params.movie_id;
 
   const [movie, setMovie] = useState<MovieData | null>(null);
   const [cast, setCast] = useState<Cast[]>([]);
-  const [selectedCastMovies, setSelectedCastMovies] = useState<MovieData[] | null>(null);
+  const [selectedCastMovies, setSelectedCastMovies] = useState<MovieCredit[] | null>(null);
   const [selectedCastName, setSelectedCastName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [castLoading, setCastLoading] = useState(false);
@@ -75,9 +82,9 @@ const MovieDetailPage = () => {
       );
       const data = await res.json();
       // Filter out the current movie and sort by popularity
-      const otherMovies = (data.cast || [])
-        .filter((m: any) => m.id !== Number(movie_id))
-        .sort((a: any, b: any) => b.popularity - a.popularity);
+      const otherMovies = (data.cast as MovieCredit[] || [])
+        .filter((m) => m.id !== Number(movie_id))
+        .sort((a, b) => b.popularity - a.popularity);
       
       setSelectedCastMovies(otherMovies.slice(0, 20));
     } catch (error) {
